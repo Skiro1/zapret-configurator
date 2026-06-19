@@ -1,0 +1,10 @@
+# Discord domains
+discord.com
+discord.gg
+discordapp.com
+discordapp.net
+discord.media
+cdn.discordapp.com
+media.discordapp.net
+images-ext-1.discordapp.net
+images-ext-2.discordapp.net

@@ -1,0 +1,3 @@
+# SoundCloud domains
+soundcloud.com
+sndcdn.com

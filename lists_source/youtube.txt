@@ -1,0 +1,7 @@
+# YouTube domains
+youtube.com
+www.youtube.com
+youtu.be
+ytimg.com
+i.ytimg.com
+s.ytimg.com

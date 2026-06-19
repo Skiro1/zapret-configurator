@@ -1,0 +1,4 @@
+# itch.io domains
+itch.io
+if.itch.io
+html.itch.io

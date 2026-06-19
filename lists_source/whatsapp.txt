@@ -1,0 +1,3 @@
+# WhatsApp domains
+whatsapp.com
+web.whatsapp.com

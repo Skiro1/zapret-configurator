@@ -1,0 +1,11 @@
+# Google Video / YouTube domains
+googlevideo.com
+youtu.be
+youtube.com
+youtube-nocookie.com
+ytimg.com
+jnn-pa.googleapis.com
+play.google.com
+music.youtube.com
+tv.youtube.com
+tv.google

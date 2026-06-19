@@ -1,0 +1,4 @@
+# Facebook domains
+facebook.com
+www.facebook.com
+fbcdn.net

@@ -1,0 +1,4 @@
+# Instagram domains
+instagram.com
+www.instagram.com
+cdninstagram.com

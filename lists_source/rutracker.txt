@@ -1,0 +1,5 @@
+# Rutracker domains
+rutracker.org
+rutracker.net
+rutracker.nl
+rutracker.com

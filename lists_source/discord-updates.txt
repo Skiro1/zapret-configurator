@@ -1,0 +1,9 @@
+# Discord update domains
+dl.discordapp.net
+discord.com
+cdn.discordapp.com
+media.discordapp.net
+status.discord.com
+discord.statuspage.io
+sentry.discord.com
+cdn.discord.com

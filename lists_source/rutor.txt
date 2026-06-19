@@ -1,0 +1,7 @@
+# Rutor domains
+rutor.info
+rutor.is
+rutor.eu
+rutor.org
+rutor.top
+rutor.me

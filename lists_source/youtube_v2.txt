@@ -1,0 +1,4 @@
+# YouTube v2
+youtube.com
+www.youtube.com
+youtu.be

@@ -1,0 +1,3 @@
+# NTC Party domains
+ntc.party
+forum.ntc.party

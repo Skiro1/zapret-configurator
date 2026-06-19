@@ -1,0 +1,6 @@
+# Twitter/X domains
+twitter.com
+www.twitter.com
+x.com
+www.x.com
+twimg.com

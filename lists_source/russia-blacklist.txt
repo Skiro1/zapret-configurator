@@ -1,0 +1,26 @@
+# Russia blacklist domains
+# Blocked resources in Russia
+rutracker.org
+rutor.info
+nnmclub.to
+kinozal.tv
+fast-torrent.ru
+lostfilm.tv
+newstudio.tv
+baibako.tv
+hdclub.org
+rutorrent.com
+nnm-club.me
+rpgmaker.name
+wot-news.com
+my.mail.ru
+vk.com
+ok.ru
+youtube.com
+youtu.be
+google.com
+discord.com
+discord.gg
+discordapp.com
+t.me
+telegram.org

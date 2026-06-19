@@ -1,0 +1,38 @@
+# Binaries
+*.exe
+*.dll
+*.sys
+*.o
+*.so
+
+# Go
+/pkg/
+/vendor/
+
+# Output
+output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Temporary
+*.tmp
+*.log
+*.bak
+
+# Downloaded runtime (large files)
+**/winws.exe
+**/winws2.exe
+**/WinDivert.dll
+**/WinDivert64.dll
+**/Monkey64.sys
+**/cygwin1.dll
