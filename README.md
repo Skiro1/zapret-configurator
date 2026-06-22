@@ -24,7 +24,7 @@ zapret-configurator autopick --engine zapret2 --mode full --top 10
 ### Из исходников
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Skiro1/zapret-configurator
 cd zapret-configurator
 go build -o zapret-configurator.exe .
 zapret-configurator all --engine both
