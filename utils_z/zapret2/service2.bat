@@ -2,18 +2,18 @@
 set "LOCAL_VERSION=1.9.9c"
 
 :: External commands
-if /i "%~1"=="status_zapret" (
-    call :test_service zapret2 soft
+if "%~1"=="status_zapret" (
+    call :test_service zapret soft
     call :tcp_enable
     exit /b
 )
 
-if /i "%~1"=="check_updates" (
+if "%~1"=="check_updates" (
     if defined NO_UPDATE_CHECK exit /b
 
     if exist "%~dp0utils\check_updates.enabled" (
         if not "%~2"=="soft" (
-            start /b service2 check_updates soft
+            start /b service check_updates soft
         ) else (
             call :service_check_updates soft
         )
@@ -22,22 +22,22 @@ if /i "%~1"=="check_updates" (
     exit /b
 )
 
-if /i "%~1"=="load_game_filter" (
+if "%~1"=="load_game_filter" (
     call :game_switch_status
     exit /b
 )
 
-if /i "%~1"=="load_user_lists" (
+if "%~1"=="load_user_lists" (
     call :load_user_lists
     exit /b
 )
 
-if /i "%~1"=="admin" (
+if "%1"=="admin" (
     call :check_command chcp
     call :check_command find
     call :check_command findstr
     call :check_command netsh
-
+    
     call :load_user_lists
 
     echo Started with admin rights
@@ -46,7 +46,7 @@ if /i "%~1"=="admin" (
     call :check_command powershell
 
     echo Requesting admin rights...
-    powershell -NoProfile -Command "Start-Process 'cmd.exe' -ArgumentList '/c ""%~f0" admin"' -Verb RunAs"
+    powershell -NoProfile -Command "Start-Process 'cmd.exe' -ArgumentList '/c \"\"%~f0\" admin\"' -Verb RunAs"
     exit
 )
 
@@ -54,7 +54,7 @@ if /i "%~1"=="admin" (
 :: MENU ================================
 setlocal EnableDelayedExpansion
 set "BYPASS_EXE=winws2.exe"
-title ZAPRET2 SERVICE MANAGER v!LOCAL_VERSION!
+title ZAPRET SERVICE MANAGER v!LOCAL_VERSION!
 :menu
 
 cls
@@ -67,7 +67,7 @@ call :get_strategy_name
 set "menu_choice=null"
 
 echo.
-echo   ZAPRET2 SERVICE MANAGER v!LOCAL_VERSION!
+echo   ZAPRET SERVICE MANAGER v!LOCAL_VERSION!
 echo.  !CurrentStrategy!
 echo   ----------------------------------------
 echo.
@@ -141,12 +141,12 @@ exit /b
 cls
 chcp 437 > nul
 
-sc query "zapret2" >nul 2>&1
+sc query "zapret" >nul 2>&1
 if !errorlevel!==0 (
-    for /f "tokens=2*" %%A in ('reg query "HKLM\System\CurrentControlSet\Services\zapret2" /v zapret2-discord-youtube 2^>nul') do echo Service strategy installed from "%%B"
+    for /f "tokens=2*" %%A in ('reg query "HKLM\System\CurrentControlSet\Services\zapret" /v zapret-discord-youtube 2^>nul') do echo Service strategy installed from "%%B"
 )
 
-call :test_service zapret2
+call :test_service zapret
 call :test_service WinDivert
 
 set "BIN_PATH=%~dp0bin\"
@@ -182,7 +182,7 @@ set "ServiceStatus=%ServiceStatus: =%"
 
 if "%ServiceStatus%"=="RUNNING" (
     if "%~2"=="soft" (
-        echo "%ServiceName%" is ALREADY RUNNING as service, use "service2.bat" and choose "Remove Services" first if you want to run standalone bat.
+        echo "%ServiceName%" is ALREADY RUNNING as service, use "service.bat" and choose "Remove Services" first if you want to run standalone bat.
         pause
         exit /b
     ) else (
@@ -202,7 +202,7 @@ exit /b
 cls
 chcp 65001 > nul
 
-set SRVCNAME=zapret2
+set SRVCNAME=zapret
 sc query "!SRVCNAME!" >nul 2>&1
 if !errorlevel!==0 (
     net stop %SRVCNAME%
@@ -359,17 +359,17 @@ call :tcp_enable
 set ARGS=%args%
 call set "ARGS=%%ARGS:EXCL_MARK=^!%%"
 echo Final args: !ARGS!
-set SRVCNAME=zapret2
+set SRVCNAME=zapret
 
 net stop %SRVCNAME% >nul 2>&1
 sc delete %SRVCNAME% >nul 2>&1
-sc create %SRVCNAME% binPath= "\"%BIN_PATH%%BYPASS_EXE%\" !ARGS!" DisplayName= "zapret2" start= auto
-sc description %SRVCNAME% "Zapret2 DPI bypass software"
+sc create %SRVCNAME% binPath= "\"%BIN_PATH%%BYPASS_EXE%\" !ARGS!" DisplayName= "zapret" start= auto
+sc description %SRVCNAME% "Zapret DPI bypass software"
 sc start %SRVCNAME%
 for %%F in ("!file%choice%!") do (
     set "filename=%%~nF"
 )
-reg add "HKLM\System\CurrentControlSet\Services\zapret2" /v zapret2-discord-youtube /t REG_SZ /d "!filename!" /f
+reg add "HKLM\System\CurrentControlSet\Services\zapret" /v zapret-discord-youtube /t REG_SZ /d "!filename!" /f
 
 pause
 goto menu
@@ -390,7 +390,7 @@ for /f "delims=" %%A in ('powershell -NoProfile -Command "(Invoke-WebRequest -Ur
 
 :: Error handling
 if not defined GITHUB_VERSION (
-    echo Warning: failed to fetch the latest version. This warning does not affect the operation of zapret2
+    echo Warning: failed to fetch the latest version. This warning does not affect the operation of zapret
     timeout /T 9
     if "%1"=="soft" exit 
     goto menu
@@ -428,7 +428,7 @@ sc query BFE | findstr /I "RUNNING" > nul
 if !errorlevel!==0 (
     call :PrintGreen "Base Filtering Engine check passed"
 ) else (
-    call :PrintRed "[X] Base Filtering Engine is not running. This service is required for zapret2 to work"
+    call :PrintRed "[X] Base Filtering Engine is not running. This service is required for zapret to work"
 )
 echo:
 
@@ -480,7 +480,7 @@ echo:
 :: Killer
 sc query | findstr /I "Killer" > nul
 if !errorlevel!==0 (
-    call :PrintRed "[X] Killer services found. Killer conflicts with zapret2"
+    call :PrintRed "[X] Killer services found. Killer conflicts with zapret"
     call :PrintRed "https://github.com/Flowseal/zapret-discord-youtube/issues/2512#issuecomment-2821119513"
 ) else (
     call :PrintGreen "Killer check passed"
@@ -490,7 +490,7 @@ echo:
 :: Intel Connectivity Network Service
 sc query | findstr /I "Intel" | findstr /I "Connectivity" | findstr /I "Network" > nul
 if !errorlevel!==0 (
-    call :PrintRed "[X] Intel Connectivity Network Service found. It conflicts with zapret2"
+    call :PrintRed "[X] Intel Connectivity Network Service found. It conflicts with zapret"
     call :PrintRed "https://github.com/ValdikSS/GoodbyeDPI/issues/541#issuecomment-2661670982"
 ) else (
     call :PrintGreen "Intel Connectivity check passed"
@@ -510,7 +510,7 @@ if !errorlevel!==0 (
 )
 
 if !checkpointFound!==1 (
-    call :PrintRed "[X] Check Point services found. Check Point conflicts with zapret2"
+    call :PrintRed "[X] Check Point services found. Check Point conflicts with zapret"
     call :PrintRed "Try to uninstall Check Point"
 ) else (
     call :PrintGreen "Check Point check passed"
@@ -520,7 +520,7 @@ echo:
 :: SmartByte
 sc query | findstr /I "SmartByte" > nul
 if !errorlevel!==0 (
-    call :PrintRed "[X] SmartByte services found. SmartByte conflicts with zapret2"
+    call :PrintRed "[X] SmartByte services found. SmartByte conflicts with zapret"
     call :PrintRed "Try to uninstall or disable SmartByte through services.msc"
 ) else (
     call :PrintGreen "SmartByte check passed"
@@ -549,7 +549,7 @@ if !errorlevel!==0 (
             set "VPN_SERVICES=!VPN_SERVICES!,%%A"
         )
     )
-    call :PrintYellow "[?] VPN services found:!VPN_SERVICES!. Some VPNs can conflict with zapret2"
+    call :PrintYellow "[?] VPN services found:!VPN_SERVICES!. Some VPNs can conflict with zapret"
     call :PrintYellow "Make sure that all VPNs are disabled"
 ) else (
     call :PrintGreen "VPN check passed"
@@ -623,6 +623,7 @@ if !winws_running! neq 0 if !windivert_running!==0 (
             call :PrintRed "[X] No conflicting services found. Check manually if any other bypass is using WinDivert."
         ) else (
             call :PrintYellow "[?] Attempting to delete WinDivert again..."
+
             net stop "WinDivert" >nul 2>&1
             sc delete "WinDivert" >nul 2>&1
             sc query "WinDivert" >nul 2>&1
@@ -795,7 +796,7 @@ if "%GameFilterChoice%"=="0" (
     goto menu
 )
 
-call :PrintYellow "Restart the zapret2 to apply the changes"
+call :PrintYellow "Restart the zapret to apply the changes"
 pause
 goto menu
 
@@ -1021,7 +1022,7 @@ goto menu
 :: Get strategy name
 :get_strategy_name
 set "CurrentStrategy="
-for /f "tokens=2*" %%A in ('reg query "HKLM\System\CurrentControlSet\Services\zapret2" /v zapret2-discord-youtube 2^>nul') do set "CurrentStrategy=Strategy: %%B"
+for /f "tokens=2*" %%A in ('reg query "HKLM\System\CurrentControlSet\Services\zapret" /v zapret-discord-youtube 2^>nul') do set "CurrentStrategy=Strategy: %%B"
 exit /b
 
 
@@ -1055,7 +1056,7 @@ set "extracted=1"
 if not exist "%~dp0bin\" set "extracted=0"
 
 if "%extracted%"=="0" (
-    echo Zapret2 must be extracted from archive first or bin folder not found for some reason
+    echo Zapret must be extracted from archive first or bin folder not found for some reason
     pause
     exit
 )
