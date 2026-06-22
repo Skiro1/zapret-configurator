@@ -53,7 +53,7 @@ if not exist "%BIN%\%BYPASS_EXE%" (
 )
 
 set "CFG="
-for /f "delims=" %%F in ('powershell -NoProfile -Command "Get-ChildItem -LiteralPath ''%ROOT%'' -Filter ''.bat'' ^| Where-Object { $_.Name -notlike ''service*'' } ^| Sort-Object Name ^| Select-Object -First 1 -ExpandProperty Name"') do set "CFG=%%F"
+for /f "delims=" %%F in ('powershell -NoProfile -Command "Get-ChildItem -LiteralPath ''%ROOT%'' -Filter ''*.bat'' ^| Where-Object { $_.Name -notlike ''service*'' } ^| Sort-Object Name ^| Select-Object -First 1 -ExpandProperty Name"') do set "CFG=%%F"
 if not defined CFG (
     echo No config .bat found in %ROOT%
     pause
