@@ -64,6 +64,18 @@ func buildFinalForEngine(opts config.Options, engine string) error {
 		if err := ensureZapret2ExeLayout(finalDir); err != nil {
 			return err
 		}
+		if err := CopyDirIfExists(filepath.Join("utils_z", "zapret2", "utils"), filepath.Join(finalDir, "utils")); err != nil {
+			return err
+		}
+		if err := CopyFileIfExists(filepath.Join("utils_z", "zapret2", "service2.bat"), filepath.Join(finalDir, "service2.bat")); err != nil {
+			return err
+		}
+		if err := CopyFileIfExists(filepath.Join("utils_z", "zapret2", "test_zapret2.ps1"), filepath.Join(finalDir, "utils", "test_zapret2.ps1")); err != nil {
+			return err
+		}
+		if err := os.MkdirAll(filepath.Join(finalDir, "utils", "test results"), 0o755); err != nil {
+			return err
+		}
 	}
 	listsSource := findListsSource(opts)
 	if err := zlists.EnsureLists(finalDir, listsSource); err != nil {
