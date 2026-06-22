@@ -18,6 +18,13 @@ import (
 	zruntime "zapret-configurator/internal/runtime"
 )
 
+const (
+	configStartTimeout = 15 * time.Second
+	configReadyTimeout = 8 * time.Second
+	configWarmupDelay  = 5 * time.Second
+	configSettleDelay  = 500 * time.Millisecond
+)
+
 func Run(ctx context.Context, opts config.Options) error {
 	var all []report.AutopickResult
 	if opts.WantsZapret() {
@@ -110,9 +117,8 @@ func runForEngine(ctx context.Context, opts config.Options, engine, exeName stri
 		fmt.Printf("[%s %d/%d] %s\n", engine, i+1, len(files), filepath.Base(file))
 		result := testConfig(ctx, engine, exeName, file, opts.Target)
 		results = append(results, result)
-		killProcess(ctx, exeName)
-		zruntime.CleanupWinDivert(ctx)
-		time.Sleep(500 * time.Millisecond)
+		cleanupAfterRun(ctx, exeName)
+		time.Sleep(configSettleDelay)
 	}
 	if err := copyTop(results, opts.AutopickDir(engine), opts.Top, finalDir, engine); err != nil {
 		return results, err
@@ -125,6 +131,7 @@ func testConfig(ctx context.Context, engine, exeName, batPath, target string) re
 		Engine:     engine,
 		ConfigPath: batPath,
 	}
+
 	cmd := exec.CommandContext(ctx, "cmd.exe", "/c", batPath)
 	cmd.Dir = filepath.Dir(batPath)
 	cmd.SysProcAttr = hideWindow()
@@ -132,14 +139,27 @@ func testConfig(ctx context.Context, engine, exeName, batPath, target string) re
 		result.Error = err.Error()
 		return result
 	}
+
 	done := make(chan error, 1)
-	go func() { done <- cmd.Wait() }()
+	go func() {
+		done <- cmd.Wait()
+	}()
+
 	select {
 	case <-done:
-	case <-time.After(10 * time.Second):
+	case <-time.After(configStartTimeout):
 		_ = cmd.Process.Kill()
+		select {
+		case <-done:
+		case <-time.After(2 * time.Second):
+		}
 	}
-	time.Sleep(2 * time.Second)
+
+	if exeName != "" && !waitForProcessRunning(ctx, exeName, configReadyTimeout) {
+		fmt.Printf("warning: %s did not appear within %s\n", exeName, configReadyTimeout)
+	}
+
+	time.Sleep(configWarmupDelay)
 	result.Probes = probes.RunAll(ctx, target)
 	result.Success = anyProbeSuccess(result.Probes)
 	return result
@@ -198,13 +218,15 @@ func catalogScanAndTest(ctx context.Context, opts config.Options, all *[]report.
 			continue
 		}
 		_ = cmd.Wait()
-		time.Sleep(5 * time.Second)
+		if !waitForProcessRunning(ctx, "winws2.exe", configReadyTimeout) {
+			fmt.Println("warning: winws2.exe did not become visible after catalog preset start")
+		}
+		time.Sleep(configWarmupDelay)
 		result.Probes = probes.RunAll(ctx, opts.Target)
 		result.Success = anyProbeSuccess(result.Probes)
 		*all = append(*all, result)
-		killProcess(ctx, "winws2.exe")
-		zruntime.CleanupWinDivert(ctx)
-		time.Sleep(1 * time.Second)
+		cleanupAfterRun(ctx, "winws2.exe")
+		time.Sleep(time.Second)
 	}
 	return nil
 }
@@ -321,8 +343,85 @@ func anyProbeSuccess(probes []report.ProbeResult) bool {
 	return false
 }
 
+func cleanupAfterRun(ctx context.Context, exeName string) {
+	killProcess(ctx, exeName)
+	_ = waitForProcessExit(ctx, exeName, 5*time.Second)
+	zruntime.CleanupWinDivert(ctx)
+}
+
+func waitForProcessRunning(ctx context.Context, exeName string, timeout time.Duration) bool {
+	exeName = normalizeExeName(exeName)
+	if exeName == "" {
+		return false
+	}
+	deadline := time.NewTimer(timeout)
+	defer deadline.Stop()
+	ticker := time.NewTicker(250 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		if processRunning(exeName) {
+			return true
+		}
+		select {
+		case <-ctx.Done():
+			return false
+		case <-deadline.C:
+			return false
+		case <-ticker.C:
+		}
+	}
+}
+
+func waitForProcessExit(ctx context.Context, exeName string, timeout time.Duration) bool {
+	exeName = normalizeExeName(exeName)
+	if exeName == "" {
+		return true
+	}
+	deadline := time.NewTimer(timeout)
+	defer deadline.Stop()
+	ticker := time.NewTicker(250 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		if !processRunning(exeName) {
+			return true
+		}
+		select {
+		case <-ctx.Done():
+			return false
+		case <-deadline.C:
+			return false
+		case <-ticker.C:
+		}
+	}
+}
+
+func processRunning(exeName string) bool {
+	out, err := exec.Command("tasklist", "/FI", "IMAGENAME eq "+exeName).Output()
+	if err != nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(string(out)), strings.ToLower(exeName))
+}
+
+func normalizeExeName(exeName string) string {
+	exeName = strings.TrimSpace(exeName)
+	if exeName == "" {
+		return ""
+	}
+	if !strings.HasSuffix(strings.ToLower(exeName), ".exe") {
+		exeName += ".exe"
+	}
+	return exeName
+}
+
 func killProcess(ctx context.Context, exeName string) {
-	_ = exec.CommandContext(ctx, "taskkill", "/IM", exeName, "/F").Run()
+	exeName = normalizeExeName(exeName)
+	if exeName == "" {
+		return
+	}
+	_ = exec.CommandContext(ctx, "taskkill", "/IM", exeName, "/T", "/F").Run()
 }
 
 func copyTop(results []report.AutopickResult, dstDir string, top int, finalDir, engine string) error {
